@@ -42,7 +42,6 @@ const slice = createSlice({
     b.addCase(loadMe.rejected, (s, a) => {
       s.user = null;
       s.initialised = true;
-      // keep the tokens if the server was just unreachable; clear only when they are really invalid
       if ((a.error as { message?: string }).message?.includes('401')) tokens.clear();
     });
     for (const t of [login, registerUser, googleAuth]) {

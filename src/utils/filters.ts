@@ -6,7 +6,6 @@ export interface Filters {
 }
 export const EMPTY_FILTERS: Filters = { category: '', make: '', model: '', fuel: '', driver: '', condition: '', place: { district: '', city: '' }, payment: 'daily', minPrice: '', maxPrice: '', sort: 'newest' };
 
-/** Filters -> the query string of /find (empty values are left out) */
 export function toParams(f: Filters, page = 1): URLSearchParams {
   const q = new URLSearchParams();
   const put = (k: string, v: string) => { if (v.trim()) q.set(k, v.trim()); };

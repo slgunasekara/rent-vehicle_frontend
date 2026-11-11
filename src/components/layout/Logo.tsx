@@ -1,9 +1,6 @@
 import { Link } from 'react-router-dom';
 
-/**
- * The Vehicle Buddy logo (van, location pin and keys) + the name. No version number is shown here, on purpose.
- * The image keeps its own shape, so only the height is set. `responsive` = smaller on phones (for the top bar).
- */
+
 export default function Logo({ light = false, size = 40, to = '/', responsive = false, textClass = '' }: { light?: boolean; size?: number; to?: string; responsive?: boolean; textClass?: string }) {
   return (
     <Link to={to} className="flex items-center gap-2 sm:gap-2.5" aria-label="Vehicle Buddy home">

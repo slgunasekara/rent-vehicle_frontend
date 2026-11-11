@@ -1,4 +1,3 @@
-/** Tamil. The English text is the key; anything missing simply shows in English. */
 const ta: Record<string, string> = {
   'Home': 'முகப்பு', 'Find Vehicles': 'வாகனங்களைத் தேடு', 'Contact': 'தொடர்புக்கு', 'About Us': 'எங்களைப் பற்றி', 'About us': 'எங்களைப் பற்றி',
   'Post an Ad': 'விளம்பரம் இடு', 'My Ads': 'என் விளம்பரங்கள்', 'Account': 'கணக்கு', 'Login': 'உள்நுழை', 'Register': 'பதிவு செய்', 'Logout': 'வெளியேறு',

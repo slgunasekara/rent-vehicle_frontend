@@ -5,9 +5,7 @@
 :root { color-scheme: light; }
 html.dark { color-scheme: dark; }
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
-/* nothing may ever make the whole page scroll sideways (clip, unlike hidden, keeps position: sticky working) */
 html, body { overflow-x: clip; max-width: 100%; }
-/* long words / emails / bus numbers wrap instead of pushing the layout wider than the screen */
 h1, h2, h3, h4, p, li, td, th, label, dd, dt, blockquote { overflow-wrap: break-word; }
 h1, h2, h3, h4 { text-wrap: balance; }
 @supports (-webkit-touch-callout: none) { body { min-height: -webkit-fill-available; } }
@@ -26,11 +24,9 @@ body { @apply bg-surface text-navy-900 antialiased; font-family: 'Inter', 'Noto 
   .th { @apply px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-brand-700; }
   .td { @apply px-4 py-3 text-sm; }
 
-  /* ---------- phones (under 640px): the same cards and buttons, just smaller, so more fits on the screen ---------- */
   @media (max-width: 639px) {
     .card { @apply rounded-xl p-4; }
     .btn { @apply px-4 py-2.5; }
-    /* 16px inputs: iPhones zoom the whole page in when a smaller field is tapped */
     .input { font-size: 16px; padding-top: .6rem; padding-bottom: .6rem; }
     .th { @apply px-3 py-2.5 text-[10px]; }
     .td { @apply px-3 py-2.5 text-[13px]; }
@@ -38,14 +34,11 @@ body { @apply bg-surface text-navy-900 antialiased; font-family: 'Inter', 'Noto 
   }
 }
 
-/* wide tables scroll inside their own box on a phone instead of stretching the page */
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
-/* react-hot-toast messages never wider than the screen */
 @media (max-width: 480px) { [data-rht-toaster] > div, [data-rht-toaster] { max-width: 100vw; } }
 
-/* Console sidebar scrollbar: slim, deep-navy track and a blue-to-aqua thumb, so it matches the dark sidebar
-   instead of the white system bar with arrows. Chromium/Safari use the -webkit rules; Firefox the standard ones. */
+
 .side-scroll::-webkit-scrollbar { width: 9px; }
 .side-scroll::-webkit-scrollbar-track { background: rgba(3, 21, 46, .55); border-radius: 999px; margin: 4px 0; }
 .side-scroll::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #2f7fd6, #22b8d8); border: 2px solid transparent; background-clip: padding-box; border-radius: 999px; }
@@ -55,26 +48,20 @@ body { @apply bg-surface text-navy-900 antialiased; font-family: 'Inter', 'Noto 
   .side-scroll { scrollbar-width: thin; scrollbar-color: #2f7fd6 rgba(3, 21, 46, .55); }
 }
 
-/* 3D tilt cards */
 .tilt { position: relative; transition: transform .25s ease, box-shadow .25s ease; }
-/* invisible strip below/above the card keeps the hover area still while the card lifts (prevents flicker) */
 .tilt::after { content: ''; position: absolute; left: 0; right: 0; top: -10px; bottom: -10px; }
 .tilt:hover { transform: translateY(-5px); box-shadow: 0 30px 50px -20px rgba(6,44,92,.45); }
-/* for anything containing buttons/links: NO movement, so clicks never jitter */
 .lift { transition: box-shadow .25s ease, border-color .25s ease; }
 .lift:hover { box-shadow: 0 24px 44px -22px rgba(6,44,92,.5); border-color: #4f93e6; }
 
-/* reveal on scroll */
 .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
 .reveal.in { opacity: 1; transform: none; }
 
 .glass { background: rgba(4, 31, 65, .55); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,.16); }
 
-/* "how it works" connector line draws itself when it scrolls into view */
 .reveal .steps-line { transform: scaleX(0); transform-origin: left; transition: transform 1.2s ease .2s; }
 .reveal.in .steps-line { transform: scaleX(1); }
 
-/* smooth theme change on the big surfaces */
 .card, .input, .btn-ghost, .tilt, .lift { transition-property: background-color, border-color, color, box-shadow, transform; transition-duration: .25s; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -86,13 +73,7 @@ body { @apply bg-surface text-navy-900 antialiased; font-family: 'Inter', 'Noto 
 }
 
 
-/* ------------------------------------------------------------------------------------------------
- * DARK MODE
- * One navy-based palette for the whole site. Light mode is untouched; everything below only applies
- * when <html> has the "dark" class (see theme.tsx). Surfaces get deeper navy, text gets light, and
- * the coloured badges / alert boxes become soft translucent tints so they stay readable.
- *   page #07142a  |  card #0d2140  |  raised #12294d  |  border #1d3a66 / #284c82
- * ---------------------------------------------------------------------------------------------- */
+
 html.dark body { background: #07142a; color: #e6eefb; }
 .dark .bg-surface { background-color: #07142a; }
 .dark .bg-white { background-color: #0d2140; }
@@ -103,7 +84,6 @@ html.dark body { background: #07142a; color: #e6eefb; }
 .dark .hover\:bg-brand-50:hover, .dark .hover\:bg-brand-50\/50:hover { background-color: #16305a; }
 .dark .hover\:text-navy-800:hover { color: #ffffff; }
 
-/* text */
 .dark .text-navy-900, .dark .text-navy-800 { color: #eaf2ff; }
 .dark .text-navy-700, .dark .text-navy-700\/80 { color: #bcd0ee; }
 .dark .text-slate-700 { color: #cbd8ee; }
@@ -129,7 +109,6 @@ html.dark body { background: #07142a; color: #e6eefb; }
 .dark .text-emerald-700, .dark .text-emerald-600 { color: #6ee7b7; }
 .dark .text-violet-900, .dark .text-violet-800, .dark .text-violet-700, .dark .text-violet-600 { color: #cdbffd; }
 
-/* borders + dividers */
 .dark .border-brand-100, .dark .divide-brand-100 > :not([hidden]) ~ :not([hidden]) { border-color: #1d3a66; }
 .dark .border-brand-200 { border-color: #284c82; }
 .dark .border-slate-200 { border-color: #2a436d; }
@@ -139,7 +118,6 @@ html.dark body { background: #07142a; color: #e6eefb; }
 .dark .border-violet-200 { border-color: rgba(139, 92, 246, .4); }
 .dark .ring-white { --tw-ring-color: #0d2140; }
 
-/* tinted badges and alert boxes */
 .dark .bg-sky-50, .dark .bg-sky-100, .dark .hover\:bg-sky-100:hover { background-color: rgba(56, 160, 255, .16); }
 .dark .bg-amber-50, .dark .bg-amber-50\/60, .dark .hover\:bg-amber-50:hover { background-color: rgba(245, 158, 11, .12); }
 .dark .bg-amber-100 { background-color: rgba(245, 158, 11, .2); }
@@ -154,11 +132,9 @@ html.dark body { background: #07142a; color: #e6eefb; }
 .dark .bg-aqua-300\/40 { background-color: rgba(95, 208, 232, .22); }
 .dark .decoration-red-300 { text-decoration-color: rgba(252, 165, 165, .6); }
 
-/* gradients that start white and end pale blue (weather cards, route cards) */
 .dark .from-white { --tw-gradient-from: #0f2547 var(--tw-gradient-from-position); --tw-gradient-to: rgb(15 37 71 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
 .dark .to-brand-50 { --tw-gradient-to: #0b1d3a var(--tw-gradient-to-position); }
 
-/* component classes */
 .dark .card { background-color: #0d2140; border-color: #1d3a66; box-shadow: 0 10px 30px -14px rgba(0, 0, 0, .6); }
 .dark .input { background-color: #0a1b36; border-color: #284c82; color: #eaf2ff; }
 .dark .input:focus { border-color: #5ea6f3; }
@@ -173,7 +149,6 @@ html.dark body { background: #07142a; color: #e6eefb; }
 .dark .tilt:hover { box-shadow: 0 30px 50px -20px rgba(0, 0, 0, .7); }
 .dark .lift:hover { box-shadow: 0 24px 44px -22px rgba(0, 0, 0, .75); }
 
-/* charts (Recharts) */
 .dark .recharts-cartesian-grid line { stroke: #1d3a66; }
 .dark .recharts-text, .dark .recharts-cartesian-axis-tick-value { fill: #93a8cb; }
 .dark .recharts-default-tooltip { background-color: #0d2140 !important; border-color: #284c82 !important; }
@@ -185,17 +160,14 @@ html.dark body { background: #07142a; color: #e6eefb; }
 
 .dark .border-emerald-200 { border-color: rgba(16, 185, 129, .4); }
 
-/* Vehicle Buddy: the sign-in video panel, search suggestions */
 .suggest-list { scrollbar-width: thin; }
 .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-/* print: hide the menus / footer so an ad page prints cleanly */
 @media print {
   .no-print { display: none !important; }
 }
 
-/* Laptops: the screen is wide but SHORT (about 600-780px of page). The first screen must still show the whole search box,
-   so the headline gets smaller, the sub-text goes (on the shortest screens) and the box is a little tighter. */
+
 @media (min-width: 640px) and (max-height: 800px) {
   .hero-wrap { padding-top: 5rem !important; padding-bottom: 1.25rem !important; }
   .hero-title { margin-top: .6rem !important; font-size: clamp(2.3rem, calc(5.4vh + 1rem), 3.5rem) !important; }

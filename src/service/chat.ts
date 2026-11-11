@@ -11,7 +11,6 @@ export interface BuddyReply {
   degraded: boolean;
 }
 
-/** Ask Buddy, the chat helper. `history` is the earlier conversation (the server keeps nothing). */
 export async function askBuddy(message: string, history: BuddyTurn[]): Promise<BuddyReply> {
   const res = await api.post('/chat', { message, history });
   return res.data.data;

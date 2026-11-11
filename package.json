@@ -1,7 +1,7 @@
 {
   "name": "vehicle-buddy-frontend",
   "private": true,
-  "version": "7.0.0",
+  "version": "6.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

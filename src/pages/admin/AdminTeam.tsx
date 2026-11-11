@@ -1,144 +1,174 @@
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import {FormEvent, useCallback, useEffect, useState} from 'react';
 import toast from 'react-hot-toast';
-import { Ban, CheckCircle2, Copy, Eye, EyeOff, KeyRound, Pencil, RefreshCw, ShieldCheck, Trash2, UserPlus } from 'lucide-react';
-import { ConfirmModal, Empty, Field, Modal, PageHeader, Spinner } from '../../components/common/ui';
-import { api, errMsg } from '../../service/api';
-import { fmtDate } from '../../utils/format';
-import { useAppSelector } from '../../store';
+import {Eye, EyeOff, ShieldCheck, Trash2, UserPlus} from 'lucide-react';
+import {ConfirmModal, Empty, Modal, PageHeader, Spinner} from '../../components/common/ui';
+import {api, errMsg} from '../../service/api';
+import {fmtDate} from '../../utils/format';
 
-interface Admin { id: string; name: string; position: string; email: string; phone: string; isActive: boolean; isDefault: boolean; createdAt: string; addedBy: string }
-const POSITIONS = ['Manager', 'Support Officer', 'Moderator', 'Accountant', 'Marketing Officer'];
-
-/** a strong password the admin can be given (no look-alike characters like 0/O or 1/l) */
-function generatePassword(): string {
-  const sets = ['ABCDEFGHJKLMNPQRSTUVWXYZ', 'abcdefghijkmnpqrstuvwxyz', '23456789', '!@#$%&*?'];
-  const all = sets.join('');
-  const pick = (s: string): string => s[crypto.getRandomValues(new Uint32Array(1))[0] % s.length];
-  const chars = [...sets.map(pick), ...Array.from({ length: 8 }, () => pick(all))];
-  for (let i = chars.length - 1; i > 0; i--) { const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1); [chars[i], chars[j]] = [chars[j], chars[i]]; }
-  return chars.join('');
+interface AdminRow {
+    id: string;
+    name: string;
+    email: string;
+    position: string;
+    isDefault: boolean;
+    createdAt?: string
 }
 
-/** a password box with show / hide, "generate" and "copy" */
-function PasswordField({ value, onChange, label = 'Password' }: { value: string; onChange: (v: string) => void; label?: string }) {
-  const [show, setShow] = useState(false);
-  return (
-    <Field label={label} required hint="At least 8 characters. Give this password to the person - it is never sent by e-mail.">
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <input className="input !pr-11" type={show ? 'text' : 'password'} autoComplete="new-password" minLength={8} maxLength={100} value={value} onChange={(e) => onChange(e.target.value)} />
-          <button type="button" onClick={() => setShow((s) => !s)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-slate-400 hover:bg-brand-50" aria-label={show ? 'Hide password' : 'Show password'}>{show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>
-        </div>
-        <button type="button" className="btn border border-brand-200 bg-white !px-3 text-navy-800 hover:bg-brand-50" title="Make a strong password" onClick={() => { onChange(generatePassword()); setShow(true); }}><RefreshCw className="h-4 w-4" /> <span className="hidden sm:inline">Generate</span></button>
-        <button type="button" className="btn border border-brand-200 bg-white !px-3 text-navy-800 hover:bg-brand-50 disabled:opacity-40" disabled={!value} title="Copy the password" onClick={() => { void navigator.clipboard.writeText(value).then(() => toast.success('Password copied')); }}><Copy className="h-4 w-4" /></button>
-      </div>
-    </Field>
-  );
-}
+const blank = {name: '', position: '', email: '', password: ''};
 
-/** the company's admin team: add admins (they sign in on the normal login page), edit, reset a password, suspend, delete */
 export default function AdminTeam() {
-  const me = useAppSelector((s) => s.auth.user);
-  const meDefault = !!me?.isDefaultAdmin;
-  const [list, setList] = useState<Admin[] | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [add, setAdd] = useState(false);
-  const [form, setForm] = useState({ name: '', position: '', email: '', phone: '', password: '' });
-  const [edit, setEdit] = useState<Admin | null>(null);
-  const [editForm, setEditForm] = useState({ name: '', position: '' });
-  const [reset, setReset] = useState<Admin | null>(null);
-  const [newPw, setNewPw] = useState('');
-  const [del, setDel] = useState<Admin | null>(null);
-  const [suspend, setSuspend] = useState<Admin | null>(null);
+    const [rows, setRows] = useState<AdminRow[] | null>(null);
+    const [canManage, setCanManage] = useState(false);
+    const [open, setOpen] = useState(false);
+    const [f, setF] = useState(blank);
+    const [show, setShow] = useState(false);
+    const [busy, setBusy] = useState(false);
+    const [del, setDel] = useState<AdminRow | null>(null);
 
-  const load = useCallback(() => { api.get('/admin/admins').then((r) => setList(r.data.data)).catch((e) => { toast.error(errMsg(e)); setList([]); }); }, []);
-  useEffect(load, [load]);
-  const run = async (fn: () => Promise<{ data: { message?: string } }>, done: () => void) => {
-    setBusy(true);
-    try { const r = await fn(); toast.success(r.data.message ?? 'Done'); done(); load(); } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
-  };
+    const load = useCallback(() => {
+        api.get('/admin/admins').then((r) => {
+            setRows(r.data.data.items);
+            setCanManage(r.data.data.canManage);
+        }).catch((e) => {
+            toast.error(errMsg(e));
+            setRows([]);
+        });
+    }, []);
+    useEffect(load, [load]);
 
-  const submitAdd = (e: FormEvent) => { e.preventDefault(); void run(() => api.post('/admin/admins', { ...form, phone: form.phone || undefined }), () => { setAdd(false); setForm({ name: '', position: '', email: '', phone: '', password: '' }); }); };
-  const act = 'btn-ghost !px-2.5 !py-2 disabled:opacity-40';
+    const set = (k: keyof typeof blank) => (e: { target: { value: string } }) => setF((p) => ({
+        ...p,
+        [k]: e.target.value
+    }));
+    const valid = f.name.trim().length >= 2 && f.position.trim().length >= 2 && /^\S+@\S+\.\S+$/.test(f.email.trim()) && f.password.length >= 8;
 
-  return (
-    <div>
-      <PageHeader title="Admin Team" subtitle="People who can use the Company console. An admin you add signs in on the normal login page with the e-mail and password you set here." action={<button className="btn-primary" onClick={() => setAdd(true)}><UserPlus className="h-4 w-4" /> Add admin</button>} />
-      {!meDefault && <p className="mb-4 rounded-xl bg-brand-50 p-3 text-sm text-slate-600">You can add admins and edit your own name and position. Only the default admin can delete, suspend or reset the password of other admins.</p>}
+    const add = async (e: FormEvent) => {
+        e.preventDefault();
+        if (!valid) return;
+        setBusy(true);
+        try {
+            const r = await api.post('/admin/admins', {
+                ...f,
+                name: f.name.trim(),
+                position: f.position.trim(),
+                email: f.email.trim()
+            });
+            toast.success(r.data.message);
+            setOpen(false);
+            setF(blank);
+            load();
+        } catch (er) {
+            toast.error(errMsg(er));
+        } finally {
+            setBusy(false);
+        }
+    };
+    const remove = async () => {
+        if (!del) return;
+        setBusy(true);
+        try {
+            const r = await api.delete(`/admin/admins/${del.id}`);
+            toast.success(r.data.message);
+            setDel(null);
+            load();
+        } catch (er) {
+            toast.error(errMsg(er));
+        } finally {
+            setBusy(false);
+        }
+    };
 
-      {list === null ? <Spinner /> : list.length === 0 ? <div className="card"><Empty title="No admins" /></div> : (
-        <ul className="space-y-3">
-          {list.map((a) => {
-            const self = a.id === me?.id;
-            return (
-              <li key={a.id} className="card !p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-navy-700 text-lg font-extrabold text-white">{a.name[0]?.toUpperCase()}</div>
-                    <div className="min-w-0">
-                      <p className="flex flex-wrap items-center gap-1.5 font-extrabold text-navy-800"><span className="truncate">{a.name}</span>
-                        {a.isDefault && <span className="badge bg-amber-100 text-amber-800"><ShieldCheck className="h-3 w-3" /> Default admin</span>}
-                        {self && <span className="badge bg-brand-100 text-brand-700">You</span>}
-                        {!a.isActive && <span className="badge bg-red-100 text-red-700">Suspended</span>}
-                      </p>
-                      <p className="text-sm font-semibold text-brand-700">{a.position || 'Admin'}</p>
-                      <p className="truncate text-xs text-slate-500">{a.email}{a.phone ? ` · ${a.phone}` : ''}</p>
-                      <p className="text-[11px] text-slate-400">{a.isDefault ? 'Created when the site was set up' : `Added by ${a.addedBy || 'the company'} · ${fmtDate(a.createdAt)}`}</p>
+    return (
+        <div>
+            <PageHeader
+                title="Admins"
+                subtitle="Company admins who can sign in to this console. Only the default admin can add or remove admins, and the default admin can never be removed."
+                action={canManage ? <button className="btn-primary" onClick={() => {
+                    setF(blank);
+                    setShow(false);
+                    setOpen(true);
+                }}><UserPlus className="h-4 w-4"/> Add admin</button> : undefined}
+            />
+            {rows === null ? <Spinner/> : rows.length === 0 ?
+                <div className="card"><Empty title="No admins found"/></div> : (
+                    <div className="card !p-0">
+                        <div className="table-scroll">
+                            <table className="w-full min-w-[620px]">
+                                <thead>
+                                <tr className="border-b border-brand-100">
+                                    <th className="th">Name</th>
+                                    <th className="th">Company position</th>
+                                    <th className="th">Email</th>
+                                    <th className="th">Added</th>
+                                    <th className="th"/>
+                                </tr>
+                                </thead>
+                                <tbody className="divide-y divide-brand-100">
+                                {rows.map((a) => (
+                                    <tr key={a.id}>
+                                        <td className="td"><p
+                                            className="font-bold text-navy-800">{a.name} {a.isDefault &&
+                                            <span className="badge bg-violet-100 text-violet-700"><ShieldCheck
+                                                className="mr-1 inline h-3 w-3"/>Default admin</span>}</p></td>
+                                        <td className="td">{a.position || '-'}</td>
+                                        <td className="td">{a.email}</td>
+                                        <td className="td">{a.createdAt ? fmtDate(a.createdAt) : '-'}</td>
+                                        <td className="td">
+                                            <div className="flex justify-end">{canManage && !a.isDefault &&
+                                                <button className="btn-danger !px-3 !py-1.5" onClick={() => setDel(a)}
+                                                        aria-label="Delete admin" title="Delete this admin"><Trash2
+                                                    className="h-4 w-4"/></button>}</div>
+                                        </td>
+                                    </tr>
+                                ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {(meDefault || self) && <button className={act} title="Edit name and position" aria-label="Edit" onClick={() => { setEdit(a); setEditForm({ name: a.name, position: a.position }); }}><Pencil className="h-4 w-4" /></button>}
-                    {meDefault && !a.isDefault && <button className={act} title="Reset the password" aria-label="Reset password" onClick={() => { setReset(a); setNewPw(''); }}><KeyRound className="h-4 w-4" /></button>}
-                    {meDefault && !a.isDefault && (a.isActive
-                      ? <button className={act} title="Suspend (cannot sign in)" aria-label="Suspend" onClick={() => setSuspend(a)}><Ban className="h-4 w-4" /></button>
-                      : <button className={act} title="Activate again" aria-label="Activate" onClick={() => void run(() => api.patch(`/admin/admins/${a.id}`, { isActive: true }), () => undefined)}><CheckCircle2 className="h-4 w-4" /></button>)}
-                    {meDefault && !a.isDefault && <button className="btn-danger !px-2.5 !py-2" title="Delete this admin" aria-label="Delete" onClick={() => setDel(a)}><Trash2 className="h-4 w-4" /></button>}
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+                )}
+            {!canManage && rows !== null &&
+                <p className="mt-3 text-xs text-slate-500">You can view the admins. Ask the default admin to add or
+                    remove one.</p>}
 
-      <Modal open={add} onClose={() => setAdd(false)} title="Add an admin">
-        <form onSubmit={submitAdd} className="space-y-3">
-          <Field label="Full name" required><input className="input" required minLength={2} maxLength={60} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
-          <Field label="Company position" required>
-            <input className="input" required minLength={2} maxLength={60} list="positions" placeholder="e.g. Manager" value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} />
-            <datalist id="positions">{POSITIONS.map((p) => <option key={p} value={p} />)}</datalist>
-          </Field>
-          <Field label="E-mail address" required hint="This is the login e-mail."><input className="input" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
-          <Field label="Phone number" hint="Optional"><input className="input" type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
-          <PasswordField value={form.password} onChange={(v) => setForm({ ...form, password: v })} />
-          <div className="flex justify-end gap-2 pt-1"><button type="button" className="btn border border-brand-200 bg-white text-navy-800" onClick={() => setAdd(false)}>Cancel</button><button className="btn-primary" disabled={busy || form.password.length < 8}>Add admin</button></div>
-        </form>
-      </Modal>
-
-      <Modal open={!!edit} onClose={() => setEdit(null)} title="Edit admin">
-        {edit && (
-          <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void run(() => api.patch(`/admin/admins/${edit.id}`, editForm), () => setEdit(null)); }}>
-            <Field label="Full name" required><input className="input" required minLength={2} maxLength={60} value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} /></Field>
-            <Field label="Company position" required><input className="input" required minLength={2} maxLength={60} list="positions" value={editForm.position} onChange={(e) => setEditForm({ ...editForm, position: e.target.value })} /></Field>
-            <div className="flex justify-end gap-2"><button type="button" className="btn border border-brand-200 bg-white text-navy-800" onClick={() => setEdit(null)}>Cancel</button><button className="btn-primary" disabled={busy}>Save</button></div>
-          </form>
-        )}
-      </Modal>
-
-      <Modal open={!!reset} onClose={() => setReset(null)} title="Reset the password">
-        {reset && (
-          <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void run(() => api.patch(`/admin/admins/${reset.id}`, { password: newPw }), () => setReset(null)); }}>
-            <p className="text-sm text-slate-600">New password for <b className="text-navy-800">{reset.name}</b>. Their current sessions end, and they sign in with the new one.</p>
-            <PasswordField label="New password" value={newPw} onChange={setNewPw} />
-            <div className="flex justify-end gap-2"><button type="button" className="btn border border-brand-200 bg-white text-navy-800" onClick={() => setReset(null)}>Cancel</button><button className="btn-primary" disabled={busy || newPw.length < 8}>Reset password</button></div>
-          </form>
-        )}
-      </Modal>
-
-      <ConfirmModal open={!!suspend} title="Suspend this admin?" text={suspend ? `${suspend.name} will not be able to sign in until you activate them again. Nothing is deleted.` : ''} confirmLabel="Suspend" busy={busy} onClose={() => setSuspend(null)}
-        onConfirm={() => suspend && void run(() => api.patch(`/admin/admins/${suspend.id}`, { isActive: false }), () => setSuspend(null))} />
-      <ConfirmModal open={!!del} title="Delete this admin?" text={del ? `${del.name} (${del.email}) is removed for good, with any ads, hearts and ratings of this account. This cannot be undone.` : ''} busy={busy} onClose={() => setDel(null)}
-        onConfirm={() => del && void run(() => api.delete(`/admin/admins/${del.id}`), () => setDel(null))} />
-    </div>
-  );
+            <Modal open={open} onClose={() => setOpen(false)} title="Add admin">
+                <form onSubmit={add} className="space-y-3">
+                    <div><label className="label">Name</label><input className="input" value={f.name}
+                                                                     onChange={set('name')} maxLength={60} autoFocus
+                                                                     required/></div>
+                    <div><label className="label">Company position</label><input className="input" value={f.position}
+                                                                                 onChange={set('position')}
+                                                                                 maxLength={60}
+                                                                                 placeholder="e.g. Manager" required/>
+                    </div>
+                    <div><label className="label">Email address (used to sign in)</label><input className="input"
+                                                                                                type="email"
+                                                                                                value={f.email}
+                                                                                                onChange={set('email')}
+                                                                                                autoComplete="off"
+                                                                                                required/></div>
+                    <div><label className="label">Password (min 8 characters)</label>
+                        <div className="relative"><input className="input !pr-10" type={show ? 'text' : 'password'}
+                                                         value={f.password} onChange={set('password')}
+                                                         autoComplete="new-password" minLength={8} required/>
+                            <button type="button" onClick={() => setShow((s) => !s)}
+                                    aria-label={show ? 'Hide password' : 'Show password'}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-500">{show ?
+                                <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</button>
+                        </div>
+                    </div>
+                    <p className="text-xs text-slate-500">The new admin signs in on the normal sign-in page with this
+                        email and password and lands in the Company console.</p>
+                    <div className="flex justify-end gap-2">
+                        <button type="button" className="btn border border-brand-200 bg-white text-navy-800"
+                                onClick={() => setOpen(false)}>Cancel
+                        </button>
+                        <button className="btn-primary disabled:opacity-50" disabled={busy || !valid}>Add admin</button>
+                    </div>
+                </form>
+            </Modal>
+            <ConfirmModal open={!!del} title="Delete this admin?"
+                          text={del ? `${del.name} (${del.email}) will not be able to sign in any more.` : ''}
+                          busy={busy} onConfirm={remove} onClose={() => setDel(null)}/>
+        </div>
+    );
 }

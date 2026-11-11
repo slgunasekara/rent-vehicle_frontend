@@ -1,4 +1,3 @@
-/** Sinhala. The English text is the key; anything missing simply shows in English. */
 const si: Record<string, string> = {
   'Home': 'මුල් පිටුව', 'Find Vehicles': 'වාහන සොයන්න', 'Contact': 'අප අමතන්න', 'About Us': 'අප ගැන', 'About us': 'අප ගැන',
   'Post an Ad': 'දැන්වීමක් පළ කරන්න', 'My Ads': 'මගේ දැන්වීම්', 'Account': 'ගිණුම', 'Login': 'පිවිසෙන්න', 'Register': 'ලියාපදිංචි වන්න', 'Logout': 'ඉවත් වන්න',

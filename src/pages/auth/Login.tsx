@@ -9,7 +9,6 @@ import { homeFor } from '../../router/Guards';
 import { Shell, Or } from './Shell';
 import { useT } from '../../i18n';
 
-/** ONE sign-in for everybody: email + password (or Google). Nobody has to say who they are. */
 export function Login() {
   const t = useT();
   const d = useAppDispatch();
