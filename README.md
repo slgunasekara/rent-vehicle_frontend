@@ -7,14 +7,32 @@ This is the website part of Vehicle Buddy, a vehicle marketplace for Sri Lanka w
 ## What you can do on the site
 
 - Browse and search ads with filters (make, city, price, and so on), and switch between grid and list views
+  <img width="1919" height="1035" alt="image" src="https://github.com/user-attachments/assets/2c20e24a-998c-4c3f-9cfa-5b189e85781a" />
+
 - Open an ad to see photos, owner contact buttons (call / WhatsApp), reviews, similar vehicles and a trip cost calculator
+  <img width="1919" height="1032" alt="image" src="https://github.com/user-attachments/assets/ce9964e8-74a1-40fd-937b-01d0ee82c059" />
+
 - Save ads you like, and see the ones you looked at recently
+  <img width="1919" height="1031" alt="image" src="https://github.com/user-attachments/assets/69adf08b-db77-4776-8f4e-4bd5680608e7" />
+
 - Sign up with email or Google, and reset a forgotten password with an emailed code
+  <img width="1919" height="1030" alt="image" src="https://github.com/user-attachments/assets/3c31abaf-8680-4042-aa9b-302d509f75be" />
+
 - Post, edit and renew your own ads, with an optional "Write with AI" button for the description
+  <img width="1919" height="1029" alt="image" src="https://github.com/user-attachments/assets/dc21678c-1e85-4702-a857-1dfd06c10a06" />
+
 - Make an ad a Top ad (paid, through PayHere) so it shows first
+  <img width="1908" height="1030" alt="image" src="https://github.com/user-attachments/assets/aa103649-882d-4ccd-a724-ac97836871a3" />
+
 - Chat with Buddy, the built-in helper
+  <img width="1919" height="1033" alt="image" src="https://github.com/user-attachments/assets/4f1b7245-8527-4ab1-a718-9a98a985596a" />
+
 - Use the site in English, Sinhala or Tamil, in light or dark mode
+  <img width="1919" height="1033" alt="image" src="https://github.com/user-attachments/assets/4531962a-1454-4cce-b7cd-c84fc511e9a8" />
+
 - Company console for admins: users, ads, reports, contact messages, Top ad payments and the admin team
+  <img width="1919" height="1031" alt="image" src="https://github.com/user-attachments/assets/f0180777-29ea-4908-a098-747e87516099" />
+
 
 ## Built with
 
